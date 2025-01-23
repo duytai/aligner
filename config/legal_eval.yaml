@@ -1,0 +1,5 @@
+_sweep_: sweep.legal_eval.LegalEval
+_component_: recipe.legal_eval.LegalEval
+name: LegalEval
+llm: null
+dataset: null

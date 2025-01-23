@@ -2,15 +2,15 @@ from torch.utils.data import Dataset
 from datasets import load_dataset
 import pandas as pd
 
-class SgRegulation(Dataset):
+class Regulation(Dataset):
     def __init__(
         self,
         split: str,
         question_prompt: str,
         answer_prompt: str,
+        regulation: str,
         ratio: float = 0.8,
         max_len: int = None,
-        regulation: str = None,
         misconduct: str = None,
     ) -> None:
         dataset = load_dataset('taidnguyen/SingaporeLaw', split='train')
@@ -19,9 +19,9 @@ class SgRegulation(Dataset):
         regulation_list = list(df.groupby('regulation').groups.keys())
         misconduct_list = list(df.groupby('misconduct').groups.keys())
 
-        if regulation is not None:
-            assert regulation in regulation_list
-            df = df[df['regulation'] == regulation]
+        assert regulation in regulation_list
+        other = df[df['regulation'] != regulation]
+        df = df[df['regulation'] == regulation]
 
         if misconduct is not None:
             assert misconduct in misconduct_list
@@ -37,8 +37,14 @@ class SgRegulation(Dataset):
         train = pd.concat(trains, ignore_index=True, axis=0)
         test = pd.concat(tests, ignore_index=True, axis=0)
 
-        assert split in ['train', 'test']
-        data = train if split == 'train' else test
+        assert split in ['train', 'test', 'loc']
+        if split == 'train':
+            data = train
+        if split == 'test':
+            data = test
+        if split == 'loc':
+            assert len(other) >= len(test)
+            data = other[:len(test)]
         self.data = list(
             zip(
                 data['scenario'].to_list(),
